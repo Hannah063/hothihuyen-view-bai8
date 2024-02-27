@@ -1,7 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\CategoriesController;
+use App\Http\Controllers\Admin\ProductsController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\HomeController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -13,22 +16,27 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
+// client route
+Route::get('/', [HomeController::class, 'index'])->name('home')->middleware('auth.admin');
+Route::prefix('categories')->group(function () {
+    // Danh sách chuyên mục
+    Route::get('/', [CategoriesController::class, 'index'])->name('categories.list');
+
+    //Lấy chi tiết một chuyên mục
+    Route::get('/edit/{id}', [CategoriesController::class, 'getCategory'])->name('categories.edit');;
+
+    Route::post('', [CategoriesController::class, 'updateCategory']);
+
+    Route::get('/add', [CategoriesController::class, 'addCategory'])->name('categories.add');
+
+    Route::post('/add', [CategoriesController::class, 'handleAddCategory']);
+
+    Route::delete('/delete/{id}', [CategoriesController::class, 'deleteCategory']);
 });
 
-Route::get('/myview/{user}', function ($user) {
-    return view('home', ['username' => $user]);
+Route::get('san-pham/{id}', [HomeController::class, 'getProductDetail']);
+
+Route::middleware('auth.admin')->prefix('admin')->group(function () {
+    Route::get('/', [DashboardController::class, 'index']);
+    Route::resource('products', ProductsController::class)->middleware('auth.admin');
 });
-
-use App\Models\Fruit;
-
-Route::get('/fruits', function() {
-return Fruit::all();
-});
-
-use App\Http\Controllers\FruitController;
-
-Route::get('/showFruits', [FruitController::class, 'getFruits']);
-
-Route::get('/showAllFruits', [FruitController::class, 'getAllFruits']);
